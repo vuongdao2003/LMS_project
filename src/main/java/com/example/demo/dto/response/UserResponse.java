@@ -3,6 +3,7 @@ package com.example.demo.dto.response;
 import com.example.demo.entity.Role;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
+import java.time.LocalDateTime;
 
 @Getter
 @Setter
