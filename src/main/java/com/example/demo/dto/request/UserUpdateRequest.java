@@ -1,21 +1,20 @@
-package com.example.demo.dto.response;
+package com.example.demo.dto.request;
 
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
+import java.util.List;
 import java.util.Set;
 
-@Getter
-@Setter
+@Data
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class UserResponse {
-    String id;
-    String username;
-    String email;
+@Builder
+public class UserUpdateRequest {
     String firstName;
     String lastName;
-    Set<RoleResponse> roles;
+    String password;
+    String email;
+    Set<String> roles;
 }

@@ -3,6 +3,8 @@ package com.example.demo.entity;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.util.Set;
+
 @Getter
 @Setter
 @NoArgsConstructor
@@ -27,7 +29,7 @@ public class User {
     private String firstName;
     @Column(name = "last_name", columnDefinition = "NVARCHAR(255)")
     private String lastName;
-    @Column(name = "role")
-    @Enumerated(EnumType.STRING)
-    private Role role;
+
+    @ManyToMany
+    private Set<Role> roles;
 }

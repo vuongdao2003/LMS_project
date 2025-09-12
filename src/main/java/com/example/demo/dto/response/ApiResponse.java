@@ -1,20 +1,18 @@
 package com.example.demo.dto.response;
 
-import lombok.AccessLevel;
-import lombok.Builder;
-import lombok.Data;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import lombok.*;
 import lombok.experimental.FieldDefaults;
 
 import java.util.List;
 
 @Data
 @Builder
-@FieldDefaults(level = AccessLevel.PRIVATE)
+@AllArgsConstructor(access = AccessLevel.PUBLIC)   // 👈 thêm dòng này
+@NoArgsConstructor
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class ApiResponse<T> {
-    boolean success;
-    String message;
-    T data;
-    String timestamp;
-    int statusCode;
-    List<String> errors;
+    private int code = 1000 ;
+    private String message;
+    private T result;
 }

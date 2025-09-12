@@ -7,14 +7,14 @@ import jakarta.validation.constraints.Size;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
-@Getter
-@Setter
+@Data
 @NoArgsConstructor
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class RegisterRequest {
+@Builder
+public class UserCreationRequest {
     @NotBlank(message = "Username is required")
-    @Size(min = 5, message = "Username must be at least 5 characters")
+    @Size(min = 5, message = "USERNAME_INVALID")
     @Pattern(
             regexp = "^[a-zA-Z0-9._-]+$",
             message = "Username can only contain letters, numbers, '.', '_' and '-'"

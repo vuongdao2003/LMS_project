@@ -1,6 +1,6 @@
 package com.example.demo.exception;
 
-import com.example.demo.util.ResponseHelper;
+import com.example.demo.dto.response.ApiResponse;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -13,45 +13,36 @@ import java.util.stream.Collectors;
 @ControllerAdvice
 public class GlobalExceptionHandler {
 
-    // 400 - Validation error
-    @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<?> handleValidationErrors(MethodArgumentNotValidException ex) {
-        List<String> errors = ex.getBindingResult()
-                .getFieldErrors()
-                .stream()
-                .map(err -> err.getField() + ": " + err.getDefaultMessage())
-                .collect(Collectors.toList());
-
-        return ResponseHelper.badRequest("Validation failed", errors);
-    }
-
-    // 401 - Unauthorized
-    @ExceptionHandler(SecurityException.class)
-    public ResponseEntity<?> handleUnauthorized(SecurityException ex) {
-        return ResponseHelper.unauthorized("Unauthorized: " + ex.getMessage());
-    }
-
-    // 403 - Forbidden
-    @ExceptionHandler(AccessDeniedException.class)
-    public ResponseEntity<?> handleForbidden(AccessDeniedException ex) {
-        return ResponseHelper.forbidden("Forbidden: " + ex.getMessage());
-    }
-
-    // 404 - Resource not found
-    @ExceptionHandler(ResourceNotFoundException.class)
-    public ResponseEntity<?> handleNotFound(ResourceNotFoundException ex) {
-        return ResponseHelper.notFound(ex.getMessage());
-    }
-
-    // 409 - Duplicate resource
-    @ExceptionHandler(DuplicateResourceException.class)
-    public ResponseEntity<?> handleDuplicate(DuplicateResourceException ex) {
-        return ResponseHelper.conflict(ex.getMessage());
-    }
-
-    // 500 - Internal Server Error
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<?> handleGlobalException(Exception ex) {
-        return ResponseHelper.internalError("Internal Server Error: " + ex.getMessage());
+    public ResponseEntity<ApiResponse> handleRuntimeException(RuntimeException ex){
+        ApiResponse apiResponse = new ApiResponse();
+        apiResponse.setMessage(ex.getMessage());
+        apiResponse.setCode(ErrorCode.UNCATEGORIZED.getCode());
+        return ResponseEntity.badRequest().body(apiResponse);
+    }
+    @ExceptionHandler(AppException.class)
+    public ResponseEntity<ApiResponse> handleRuntimeException(AppException ex){
+        ErrorCode errorCode = ex.getErrorCode();
+        ApiResponse apiResponse = new ApiResponse();
+        apiResponse.setMessage(errorCode.getMessage());
+        apiResponse.setCode(errorCode.getCode());
+        return ResponseEntity.status(errorCode.getHttpStatusCode()).body(apiResponse);
+    }
+    @ExceptionHandler(value = AccessDeniedException.class)
+    public ResponseEntity<ApiResponse> handleRuntimeException(AccessDeniedException ex){
+        ErrorCode errorCode = ErrorCode.UNAUTHORIZED;
+        return ResponseEntity.status(errorCode.getHttpStatusCode()).body(ApiResponse
+                .builder().code(errorCode.getCode())
+                .message(errorCode.getMessage())
+                .build());
+    }
+    @ExceptionHandler(value = MethodArgumentNotValidException.class)
+    public ResponseEntity<ApiResponse> handlingValidation(MethodArgumentNotValidException ex){
+        String enumKey = ex.getFieldError().getDefaultMessage();
+        ErrorCode errorCode = ErrorCode.valueOf(enumKey);
+        ApiResponse apiResponse = new ApiResponse();
+        apiResponse.setMessage(errorCode.getMessage());
+        apiResponse.setCode(errorCode.getCode());
+        return ResponseEntity.badRequest().body(apiResponse);
     }
 }
