@@ -23,7 +23,7 @@ import javax.crypto.spec.SecretKeySpec;
 @EnableWebSecurity
 @EnableMethodSecurity
 public class SercurityConfig {
-    private static final String[] PUBLIC_ENDPOINTS = {"/api/users/**",
+    private static final String[] PUBLIC_ENDPOINTS = {"/api/users/register",
             "/auth/token","/auth/intospect",
             "/auth/login","/auth/logout"};
     @Autowired
@@ -31,7 +31,7 @@ public class SercurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity httpSecurity) throws Exception {
         httpSecurity.authorizeHttpRequests(requests
-                -> requests.requestMatchers("/auth/**","/permission").permitAll()
+                -> requests.requestMatchers( PUBLIC_ENDPOINTS).permitAll()
                 .anyRequest().authenticated());
         httpSecurity.oauth2ResourceServer(oauth2
                 -> oauth2.jwt(jwtConfigurer -> jwtConfigurer.decoder(customJwtDecoder)

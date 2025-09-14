@@ -28,7 +28,7 @@ public class UserCreationRequest {
     @NotBlank(message = "Password is required")
     @Pattern(
             regexp = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d).{8,}$",
-            message = "Password must contain at least 8 characters, including uppercase, lowercase, number"
+            message = "INVALID_PASSWORD"
     )
     String password;
 }
