@@ -110,7 +110,7 @@
         }
 
         String generateToken(User user){
-            JWSHeader header = new JWSHeader(JWSAlgorithm.HS256);
+            JWSHeader header = new JWSHeader(JWSAlgorithm.HS512);
             JWTClaimsSet jwtClaimSet = new JWTClaimsSet.Builder()
                     .subject(user.getUsername())
                     .issuer("demo.com")

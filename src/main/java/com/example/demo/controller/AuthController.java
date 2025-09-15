@@ -32,7 +32,7 @@ public class AuthController {
 
         return ApiResponse.<AuthenticationResponse>builder().result(result).build();
     }
-    @PostMapping("/intospect")
+    @PostMapping("/introspect")
     public ApiResponse<IntrospectResponse> introspect( @RequestBody IntrospectRequest introspectRequest) throws ParseException, JOSEException {
         var result = authService.introspect(introspectRequest);
         return ApiResponse.<IntrospectResponse>builder()
