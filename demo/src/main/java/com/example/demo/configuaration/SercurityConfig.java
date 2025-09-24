@@ -61,14 +61,13 @@ public class SercurityConfig {
         return jwtAuthenticationConverter;
     }
     @Bean
-    CorsFilter corsFilter() {
-         CorsConfiguration config = new CorsConfiguration();
-         config.setAllowedOrigins(List.of("*"));
-         config.setAllowedMethods(List.of("*"));
-         config.setAllowedHeaders(List.of("*"));
-         config.setAllowCredentials(true);
-         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/**", config);
+    public CorsFilter corsFilter() {
+        CorsConfiguration corsConfiguration = new CorsConfiguration();
+        corsConfiguration.addAllowedOrigin("*");
+        corsConfiguration.addAllowedHeader("*");
+        corsConfiguration.addAllowedMethod("*");
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", corsConfiguration);
         return new CorsFilter(source);
     }
 

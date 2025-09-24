@@ -2,6 +2,7 @@ spring:
   application:
     name: demo
 
+
   datasource:
     url: jdbc:mysql://localhost:3307/demo?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
     username: root
@@ -22,3 +23,5 @@ jwt:
     jackson:
       deserialization:
         accept-empty-string-as-null-object: true
+server:
+  port: 8081
