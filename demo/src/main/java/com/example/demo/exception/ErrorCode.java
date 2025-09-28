@@ -11,7 +11,9 @@ public enum ErrorCode {
     INVALID_PASSWORD(1003,"Uncategorized error",HttpStatus.BAD_REQUEST),
     USER_NOT_EXISTED(1004,"User not exitsed",HttpStatus.NOT_FOUND),
     UNAUTHENTICATED(1005,"Unauthenticated",HttpStatus.UNAUTHORIZED),
-    UNAUTHORIZED(1006,"Unauthorized",HttpStatus.FORBIDDEN),;
+    UNAUTHORIZED(1006,"Unauthorized",HttpStatus.FORBIDDEN),
+    PASSWORD_INCORRECT(1008,"Passwords do not match",HttpStatus.BAD_REQUEST),
+    ;
 
     private int code;
     private String message;

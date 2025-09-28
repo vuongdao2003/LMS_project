@@ -1,6 +1,7 @@
 package com.example.demo.service.User;
 
 import com.example.demo.constant.PredefinedRole;
+import com.example.demo.dto.request.ChangePasswordRequest;
 import com.example.demo.dto.request.ProfileCreationRequest;
 import com.example.demo.dto.request.UserCreationRequest;
 import com.example.demo.dto.request.UserUpdateRequest;
@@ -38,7 +39,7 @@ public class UserServiceImpl implements UserService {
     RoleRepository roleRepository;
     ProfileClient profileClient;
     ProfileMapper profileMapper;
-
+    PasswordEncoder passwordEncoder;
     @PreAuthorize("hasRole('ADMIN')")
     @Override
     public List<UserResponse> getAllUsers() {
@@ -51,7 +52,7 @@ public class UserServiceImpl implements UserService {
     @PreAuthorize("hasRole('ADMIN')")
     @Override
     public UserResponse getUserById(String id) {
-        return userMapper.toUserResponse(userRepository.findById(id).orElseThrow(()-> new RuntimeException("User not found")));
+        return userMapper.toUserResponse(userRepository.findById(id).orElseThrow(()-> new AppException(ErrorCode.USER_NOT_EXISTED)));
     }
 
     @Override
@@ -66,7 +67,7 @@ public class UserServiceImpl implements UserService {
     @Override
     public void deleteUser(String id) {
         if (!userRepository.existsById(id)) {
-            throw new RuntimeException("User not found");
+            throw new AppException(ErrorCode.USER_NOT_EXISTED);
         }
         userRepository.deleteById(id);
     }
@@ -99,7 +100,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public UserResponse UpdateUser(String id,UserUpdateRequest reg) {
-        User user = userRepository.findById(id).orElseThrow(()-> new RuntimeException("User not found"));
+        User user = userRepository.findById(id).orElseThrow(()-> new AppException(ErrorCode.USER_NOT_EXISTED));
        userMapper.updateUser(user, reg);
 
         PasswordEncoder passwordEncoder = new BCryptPasswordEncoder(10);
@@ -110,5 +111,21 @@ public class UserServiceImpl implements UserService {
        // user.setRole(roles);
 
         return userMapper.toUserResponse(userRepository.save(user));
+    }
+
+    @Override
+    public String changePassword(String username, ChangePasswordRequest request) {
+        User user = userRepository.findByUsername(username).orElseThrow(()-> new AppException(ErrorCode.USER_NOT_EXISTED));
+        if (!passwordEncoder.matches(request.getOldPassword(), user.getPassword())) {
+            throw new AppException(ErrorCode.PASSWORD_INCORRECT);
+        }
+
+        if (!request.getNewPassword().equals(request.getConfirmPassword())) {
+            throw new AppException(ErrorCode.PASSWORD_INCORRECT);
+        }
+
+        user.setPassword(passwordEncoder.encode(request.getNewPassword()));
+        userRepository.save(user);
+        return "Changed Password";
     }
 }

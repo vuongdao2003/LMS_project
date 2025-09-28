@@ -1,5 +1,6 @@
 package com.example.demo.controller;
 
+import com.example.demo.dto.request.ChangePasswordRequest;
 import com.example.demo.dto.request.UserCreationRequest;
 import com.example.demo.dto.request.UserUpdateRequest;
 import com.example.demo.dto.response.ApiResponse;
@@ -13,6 +14,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestClient;
 
@@ -52,6 +54,12 @@ public class UserController {
         return ApiResponse.<UserResponse>builder()
                 .result(userService.UpdateUser(id,updateRequest))
                 .build();
+    }
+    @PutMapping("/chage-password")
+    ApiResponse<String> changePassword(@RequestBody @Valid ChangePasswordRequest changePasswordRequest, Authentication authentication) {
+        String username = authentication.getName();
+        return ApiResponse.<String>
+        builder().result(userService.changePassword(username,changePasswordRequest)).build();
     }
     @DeleteMapping("/{id}")
     public void deleteUser(@PathVariable String id) {
