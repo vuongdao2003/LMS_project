@@ -1,19 +1,18 @@
-package com.example.demo.dto.request;
+package com.example.profile.dto.request;
 
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
 import java.time.LocalDate;
-import java.util.List;
-import java.util.Set;
-
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Builder
-public class UserUpdateRequest {
-    String password;
-    String email;
-    Set<String> roles;
+public class ProfileUpdateRequest {
+    String firstName;
+    String lastName;
+    LocalDate birthDate;
+    String city;
+    String description;
 }

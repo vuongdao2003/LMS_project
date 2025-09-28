@@ -1,0 +1,24 @@
+server:
+  port: 8880
+
+app:
+  api-prefix: /api
+spring:
+  application:
+    name: api-gateway
+
+  cloud:
+    gateway:
+      routes:
+        - id: demo
+          uri: http://localhost:8081
+          predicates:
+            - Path=${app.api-prefix}/identity/**
+          filters:
+            - StripPrefix=1
+        - id: profile
+          uri: http://localhost:8888
+          predicates:
+            - Path=${app.api-prefix}/profile/**
+          filters:
+            - StripPrefix=1
