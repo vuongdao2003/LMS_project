@@ -7,7 +7,7 @@ import lombok.*;
 @AllArgsConstructor
 public class VnpayRefundRequest {
     private String transactionType; // trantype
-    private String orderId;         // vnp_TxnRef
+    private String transaction;         // vnp_TxnRef
     private Long amount;            // đơn vị VNĐ (chưa *100)
     private String transDate;       // vnp_TransactionDate (yyyyMMddHHmmss)
     private String user;            // vnp_CreateBy

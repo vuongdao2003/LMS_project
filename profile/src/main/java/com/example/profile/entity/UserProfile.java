@@ -2,12 +2,11 @@ package com.example.profile.entity;
 
 import lombok.*;
 import lombok.experimental.FieldNameConstants;
-import org.springframework.data.neo4j.core.schema.GeneratedValue;
-import org.springframework.data.neo4j.core.schema.Id;
-import org.springframework.data.neo4j.core.schema.Node;
-import org.springframework.data.neo4j.core.schema.Property;
+import org.springframework.data.neo4j.core.schema.*;
 import org.springframework.data.neo4j.core.support.UUIDStringGenerator;
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
 
 @Node("user_profile")
 @Data
@@ -19,11 +18,16 @@ public class UserProfile {
     @Id
     @GeneratedValue(generatorClass = UUIDStringGenerator.class)
     String id;
-    @Property("userId")
-    String userid;
 
-    String firstname;
-    String lastname;
-    LocalDate birthdate;
+
+    String userId;
+
+    String firstName;
+    String lastName;
+    LocalDate birthDate;
     String city;
+    String description;
+
+    @Relationship(type = "HAS_LINK")
+     List<SocialLink> socialLinks = new ArrayList<>();
 }

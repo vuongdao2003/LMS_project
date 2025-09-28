@@ -1,9 +1,12 @@
 package com.example.OnlinePay.service;
 
 import com.example.OnlinePay.dto.*;
+import com.example.OnlinePay.exception.AppException;
+import com.example.OnlinePay.exception.ErrorCode;
 import com.example.OnlinePay.repository.PaymentRepository;
 import com.example.OnlinePay.config.VNPAYConfig;
 import com.example.OnlinePay.entity.Payment;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nimbusds.jose.shaded.gson.Gson;
 import com.nimbusds.jose.shaded.gson.JsonObject;
 import jakarta.servlet.http.HttpServletRequest;
@@ -26,77 +29,84 @@ public class PaymentService {
     @Autowired
     PaymentRepository paymentRepository;
 
-    public PaymentResResponse createOrder( VnpayCreateOrderRequest vnpayCreateOrderRequest) throws UnsupportedEncodingException {
+    public PaymentResResponse createOrder( VnpayCreateOrderRequest vnpayCreateOrderRequest)  {
+        try {
+            String vnp_TxnRef = VNPAYConfig.getRandomNumber(8);
+            String vnp_TmnCode = VNPAYConfig.vnp_TmnCode;
 
-        String vnp_TxnRef = VNPAYConfig.getRandomNumber(8);
-        // String vnp_IpAddr = VNPAYConfig.getIpAddress(req);
+            Map<String, String> vnp_Params = new HashMap<>();
+            vnp_Params.put("vnp_Version", VNPAYConfig.vnp_Version);
+            vnp_Params.put("vnp_Command", VNPAYConfig.vnp_Command);
+            vnp_Params.put("vnp_TmnCode", vnp_TmnCode);
+            vnp_Params.put("vnp_Amount", String.valueOf(vnpayCreateOrderRequest.getAmount() * 100));
+            vnp_Params.put("vnp_CurrCode", "VND");
+            vnp_Params.put("vnp_BankCode", "NCB");
+            vnp_Params.put("vnp_TxnRef", vnp_TxnRef);
+            vnp_Params.put("vnp_OrderType", "order");
+            vnp_Params.put("vnp_Locale", "vn");
+            vnp_Params.put("vnp_ReturnUrl", VNPAYConfig.vnp_ReturnUrl);
+            vnp_Params.put("vnp_IpAddr", "127.0.0.1");
+            vnp_Params.put("vnp_OrderInfo", "Thanh toan don hang:" + vnp_TxnRef);
 
-        String vnp_TmnCode = VNPAYConfig.vnp_TmnCode;
+            Calendar cld = Calendar.getInstance(TimeZone.getTimeZone("Etc/GMT+7"));
+            SimpleDateFormat formatter = new SimpleDateFormat("yyyyMMddHHmmss");
+            String vnp_CreateDate = formatter.format(cld.getTime());
+            vnp_Params.put("vnp_CreateDate", vnp_CreateDate);
 
-        Map<String, String> vnp_Params = new HashMap<>();
-        vnp_Params.put("vnp_Version", VNPAYConfig.vnp_Version);
-        vnp_Params.put("vnp_Command", VNPAYConfig.vnp_Command);
-        vnp_Params.put("vnp_TmnCode", vnp_TmnCode);
-        vnp_Params.put("vnp_Amount", String.valueOf(vnpayCreateOrderRequest.getAmount()*100));
-        vnp_Params.put("vnp_CurrCode", "VND");
-        vnp_Params.put("vnp_BankCode", "NCB");
-        vnp_Params.put("vnp_TxnRef", vnp_TxnRef);
-        vnp_Params.put("vnp_OrderType", "order");
-        vnp_Params.put("vnp_Locale", "vn");
-        vnp_Params.put("vnp_ReturnUrl", VNPAYConfig.vnp_ReturnUrl);
-        vnp_Params.put("vnp_IpAddr", "127.0.0.1");
-        vnp_Params.put("vnp_OrderInfo", "Thanh toan don hang:" + vnp_TxnRef);
-        Calendar cld = Calendar.getInstance(TimeZone.getTimeZone("Etc/GMT+7"));
-        SimpleDateFormat formatter = new SimpleDateFormat("yyyyMMddHHmmss");
-        String vnp_CreateDate = formatter.format(cld.getTime());
-        vnp_Params.put("vnp_CreateDate", vnp_CreateDate);
+            cld.add(Calendar.MINUTE, 15);
+            String vnp_ExpireDate = formatter.format(cld.getTime());
+            vnp_Params.put("vnp_ExpireDate", vnp_ExpireDate);
 
-        cld.add(Calendar.MINUTE, 15);
-        String vnp_ExpireDate = formatter.format(cld.getTime());
-        vnp_Params.put("vnp_ExpireDate", vnp_ExpireDate);
+            List fieldNames = new ArrayList(vnp_Params.keySet());
+            Collections.sort(fieldNames);
+            StringBuilder hashData = new StringBuilder();
+            StringBuilder query = new StringBuilder();
 
-        List fieldNames = new ArrayList(vnp_Params.keySet());
-        Collections.sort(fieldNames);
-        StringBuilder hashData = new StringBuilder();
-        StringBuilder query = new StringBuilder();
-        Iterator itr = fieldNames.iterator();
-        while (itr.hasNext()) {
-            String fieldName = (String) itr.next();
-            String fieldValue = (String) vnp_Params.get(fieldName);
-            if ((fieldValue != null) && (fieldValue.length() > 0)) {
-                //Build hash data
-                hashData.append(fieldName);
-                hashData.append('=');
-                hashData.append(URLEncoder.encode(fieldValue, StandardCharsets.US_ASCII.toString()));
-                //Build query
-                query.append(URLEncoder.encode(fieldName, StandardCharsets.US_ASCII.toString()));
-                query.append('=');
-                query.append(URLEncoder.encode(fieldValue, StandardCharsets.US_ASCII.toString()));
-                if (itr.hasNext()) {
-                    query.append('&');
-                    hashData.append('&');
+            Iterator itr = fieldNames.iterator();
+            while (itr.hasNext()) {
+                String fieldName = (String) itr.next();
+                String fieldValue = (String) vnp_Params.get(fieldName);
+                if ((fieldValue != null) && (fieldValue.length() > 0)) {
+                    //Build hash data
+                    hashData.append(fieldName);
+                    hashData.append('=');
+                    hashData.append(URLEncoder.encode(fieldValue, StandardCharsets.US_ASCII.toString()));
+                    //Build query
+                    query.append(URLEncoder.encode(fieldName, StandardCharsets.US_ASCII.toString()));
+                    query.append('=');
+                    query.append(URLEncoder.encode(fieldValue, StandardCharsets.US_ASCII.toString()));
+                    if (itr.hasNext()) {
+                        query.append('&');
+                        hashData.append('&');
+                    }
                 }
             }
+            String queryUrl = query.toString();
+            String vnp_SecureHash = VNPAYConfig.hmacSHA512(VNPAYConfig.secretKey, hashData.toString());
+            queryUrl += "&vnp_SecureHash=" + vnp_SecureHash;
+            String paymentUrl = VNPAYConfig.vnp_PayUrl + "?" + queryUrl;
+
+            PaymentResResponse paymentResResponse = new PaymentResResponse();
+            paymentResResponse.setStatus("Ok");
+            paymentResResponse.setMessage(("Successfully"));
+            paymentResResponse.setURL(paymentUrl);
+
+            Payment payment = Payment.builder()
+                    .amount(vnpayCreateOrderRequest.getAmount())
+                    .orderId(vnpayCreateOrderRequest.getOrderid())
+                    .status(Payment.PaymentStatus.PENDING)
+                    .paymentMethod("VNPAY")
+                    .transaction(vnp_TxnRef)
+                    .createdDate(vnp_CreateDate)
+                    .build();
+            paymentRepository.save(payment);
+            return paymentResResponse;
+        }catch (UnsupportedEncodingException e) {
+            throw new AppException(ErrorCode.INVALID_PAYMENT);
+        }catch (Exception e) {
+            throw new AppException(ErrorCode.UNCATEGORIZED);
         }
-        String queryUrl = query.toString();
-        String vnp_SecureHash = VNPAYConfig.hmacSHA512(VNPAYConfig.secretKey, hashData.toString());
-        queryUrl += "&vnp_SecureHash=" + vnp_SecureHash;
-        String paymentUrl = VNPAYConfig.vnp_PayUrl + "?" + queryUrl;
 
-        PaymentResResponse paymentResResponse = new PaymentResResponse();
-        paymentResResponse.setStatus("Ok");
-        paymentResResponse.setMessage(("Successfully"));
-        paymentResResponse.setURL(paymentUrl);
-
-        Payment payment = Payment.builder()
-                .amount(vnpayCreateOrderRequest.getAmount())
-                .orderId(vnpayCreateOrderRequest.getOrderid())
-                .status(Payment.PaymentStatus.PENDING)
-                .paymentMethod("VNPAY")
-                .transaction(vnp_TxnRef)
-                .build();
-        paymentRepository.save(payment);
-        return paymentResResponse;
     }
     public Map<String, String> handleIpn(HttpServletRequest request) {
         Map<String, String> response = new HashMap<>();
@@ -119,10 +129,10 @@ public class PaymentService {
             String txnRef = vnpParams.get("vnp_TxnRef");
             Payment payment = paymentRepository.findByTransaction(txnRef);
             if (payment == null) {
-                return Map.of("RspCode", "01", "Message", "Order Not Found");
+                throw new AppException(ErrorCode.ORDER_NOT_FOUND);
             }
             // Kiểm tra trạng thái và số tiền
-            boolean checkAmount = true; // TODO: so sánh với DB
+            boolean checkAmount = true;
             long amount = payment.getAmount()*100;
             String db_amount = String.valueOf(amount);
             String vnp_Amount = vnpParams.get("vnp_Amount");
@@ -132,25 +142,21 @@ public class PaymentService {
             boolean checkOrderStatus = payment.getStatus() == Payment.PaymentStatus.PENDING;
 
             if (!checkAmount) {
-                response.put("RspCode", "04");
-                response.put("Message", "Invalid Amount");
-                return response;
+                throw new AppException(ErrorCode.INVALID_AMOUNT);
             }
 
             if (!checkOrderStatus) {
-                response.put("RspCode", "02");
-                response.put("Message", "Order already confirmed");
-                return response;
+                throw new AppException(ErrorCode.ORDER_EXPIRED);
             }
             if (!validSignature) {
                 if (payment.getStatus() == Payment.PaymentStatus.PENDING) {
                     payment.setStatus(Payment.PaymentStatus.FAILED);
                     paymentRepository.save(payment);
                 }
-                return Map.of("RspCode", "97", "Message", "Invalid Checksum");
+                throw new AppException(ErrorCode.INVALID_SIGNATURE);
             }
 
-            // Chữ ký hợp lệ → check response code VNPay
+
             String responseCode = vnpParams.get("vnp_ResponseCode");
             if ("00".equals(responseCode)) {
                 payment.setStatus(Payment.PaymentStatus.SUCCESS);
@@ -161,8 +167,18 @@ public class PaymentService {
 
             return Map.of("RspCode", "00", "Message", "Confirm Success");
 
-        } catch (Exception e) {
-            return Map.of("RspCode", "99", "Message", "Unknown error: " + e.getMessage());
+        } catch (AppException ex) {
+
+            return Map.of(
+                    "RspCode", String.valueOf(ex.getErrorCode().getCode()),
+                    "Message", ex.getErrorCode().getMessage()
+            );
+        } catch (Exception ex) {
+
+            return Map.of(
+                    "RspCode", "99",
+                    "Message", "Unknown error: " + ex.getMessage()
+            );
         }
     }
 
@@ -198,16 +214,21 @@ public class PaymentService {
 
         return result;
     }
-    public VnpayQueryResponse queryTransaction(HttpServletRequest req, VnpayQueryRequest vnpayQueryRequest ) throws UnsupportedEncodingException {
-        String orderId= vnpayQueryRequest.getOrderId();
-        String transDate= vnpayQueryRequest.getTransDate();
+    public VnpayQueryResponse queryTransaction(HttpServletRequest req, VnpayQueryRequest vnpayQueryRequest )  {
+
         try {
+            String transaction= vnpayQueryRequest.getTransaction();
+            String transDate= vnpayQueryRequest.getTransDate();
+            Payment payment= paymentRepository.findByTransaction(transaction);
+            if (payment == null) {
+                throw new AppException(ErrorCode.ORDER_NOT_FOUND);
+            }
             // 1. Tham số request
             String vnp_RequestId = VNPAYConfig.getRandomNumber(8);
             String vnp_Version = "2.1.0";
             String vnp_Command = "querydr";
             String vnp_TmnCode = VNPAYConfig.vnp_TmnCode;
-            String vnp_TxnRef = orderId;
+            String vnp_TxnRef = transaction;
             String vnp_OrderInfo = "Kiem tra ket qua GD OrderId:" + vnp_TxnRef;
 
             Calendar cld = Calendar.getInstance(TimeZone.getTimeZone("Etc/GMT+7"));
@@ -281,13 +302,14 @@ public class PaymentService {
         }
     }
     public VnpayRefundResponse refundTransaction(VnpayRefundRequest req, String ipAddr) throws Exception {
+       Payment payment = paymentRepository.findByTransaction(req.getTransaction());
         // Tạo tham số
         String vnp_RequestId = VNPAYConfig.getRandomNumber(8);
         String vnp_Version = "2.1.0";
         String vnp_Command = "refund";
         String vnp_TmnCode = VNPAYConfig.vnp_TmnCode;
         String vnp_TransactionType = req.getTransactionType();
-        String vnp_TxnRef = req.getOrderId();
+        String vnp_TxnRef = payment.getTransaction();
         long amount = req.getAmount() * 100;
         String vnp_Amount = String.valueOf(amount);
         String vnp_OrderInfo = "Hoan tien GD OrderId:" + vnp_TxnRef;
@@ -351,13 +373,13 @@ public class PaymentService {
         // TODO: parse JSON response -> VnpayRefundResponse
         System.out.println("VNPay refund response: " + response);
 
-        VnpayRefundResponse res = new VnpayRefundResponse();
-        res.setResponseCode("00");
-        res.setMessage("Mock refund success ");
-        res.setTxnRef(vnp_TxnRef);
-        res.setAmount(vnp_Amount);
-        res.setTransactionNo(vnp_TransactionNo);
-        res.setTransactionStatus("00");
+
+        ObjectMapper mapper = new ObjectMapper();
+        VnpayRefundResponse res = mapper.readValue(response.toString(), VnpayRefundResponse.class);
+       if(res.getVnp_ResponseCode()=="00") {
+           payment.setStatus(Payment.PaymentStatus.REFUNDED);
+       }
         return res;
     }
+
 }

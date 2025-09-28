@@ -1,6 +1,7 @@
 package com.example.demo.service.User;
 
 import com.example.demo.constant.PredefinedRole;
+import com.example.demo.dto.request.ProfileCreationRequest;
 import com.example.demo.dto.request.UserCreationRequest;
 import com.example.demo.dto.request.UserUpdateRequest;
 import com.example.demo.dto.response.UserResponse;
@@ -8,6 +9,7 @@ import com.example.demo.entity.Role;
 import com.example.demo.entity.User;
 import com.example.demo.exception.AppException;
 import com.example.demo.exception.ErrorCode;
+import com.example.demo.mapper.ProfileMapper;
 import com.example.demo.mapper.UserMapper;
 import com.example.demo.repository.RoleRepository;
 import com.example.demo.repository.UserRepository;
@@ -35,6 +37,8 @@ public class UserServiceImpl implements UserService {
     UserMapper userMapper;
     RoleRepository roleRepository;
     ProfileClient profileClient;
+    ProfileMapper profileMapper;
+
     @PreAuthorize("hasRole('ADMIN')")
     @Override
     public List<UserResponse> getAllUsers() {
@@ -44,6 +48,7 @@ public class UserServiceImpl implements UserService {
         return users.stream().map(userMapper::toUserResponse).toList();
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @Override
     public UserResponse getUserById(String id) {
         return userMapper.toUserResponse(userRepository.findById(id).orElseThrow(()-> new RuntimeException("User not found")));
@@ -57,6 +62,7 @@ public class UserServiceImpl implements UserService {
         return userMapper.toUserResponse(user);
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @Override
     public void deleteUser(String id) {
         if (!userRepository.existsById(id)) {
@@ -66,7 +72,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public User CreateUser(UserCreationRequest reg) {
+    public UserResponse CreateUser(UserCreationRequest reg) {
         // Check tồn tại
         if (userRepository.existsByUsername(reg.getUsername())) {
             throw new AppException(ErrorCode.USER_EXISTED);
@@ -78,7 +84,17 @@ public class UserServiceImpl implements UserService {
         HashSet<Role> roles = new HashSet<>();
         roleRepository.findById(PredefinedRole.USER_ROLE).ifPresent(roles::add);
         user.setRoles(roles);
-        return userRepository.save(user);
+        userRepository.save(user);
+        ProfileCreationRequest ProfileRequest = profileMapper.toProfileCreationRequest(reg);
+        ProfileRequest.setUserId(user.getId());
+        var profileReponse = profileClient.creationProfile(ProfileRequest);
+        log.info(profileReponse.toString());
+        UserResponse userResponse = userMapper.toUserResponse(user);
+        userResponse.setFirstName(profileReponse.getFirstName());
+        userResponse.setLastName(profileReponse.getLastName());
+        userResponse.setCity(profileReponse.getCity());
+        userResponse.setBirthDate(profileReponse.getBirthDate());
+        return userResponse;
     }
 
     @Override

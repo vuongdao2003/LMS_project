@@ -8,6 +8,6 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class VnpayQueryRequest {
-    private String orderId;    // Mã đơn hàng (vnp_TxnRef)
+    private String transaction;    // Mã đơn hàng (vnp_TxnRef)
     private String transDate;
 }

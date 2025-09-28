@@ -19,7 +19,7 @@ import org.springframework.web.client.RestClient;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/users")
+@RequestMapping("/users")
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class UserController {
@@ -27,16 +27,9 @@ public class UserController {
     private final RestClient.Builder builder;
 
     @PostMapping("/register")
-    public ResponseEntity<ApiResponse<User>> register(@RequestBody @Valid UserCreationRequest reg) {
-        User user = userService.CreateUser(reg);
-
-        ApiResponse<User> apiResponse = ApiResponse.<User>builder()
-                .code(1000)
-                .message("Register success")
-                .result(user)
-                .build();
-
-        return ResponseEntity.ok(apiResponse);
+    public ApiResponse<UserResponse>register(@RequestBody @Valid UserCreationRequest reg) {
+        return ApiResponse.<UserResponse>builder()
+                .result(userService.CreateUser(reg)).build();
     }
 
     @GetMapping("/all")

@@ -44,4 +44,5 @@ public class Payment {
         FAILED,
         REFUNDED
     }
+    String createdDate;
 }

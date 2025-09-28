@@ -22,7 +22,7 @@ import java.util.List;
 @EnableWebSecurity
 @EnableMethodSecurity
 public class SercurityConfig {
-    private static final String[] PUBLIC_ENDPOINTS = {"/api/users/register",
+    private static final String[] PUBLIC_ENDPOINTS = {"/users/register",
             "/auth/token","/auth/intospect",
             "/auth/login","/auth/logout"};
     @Autowired

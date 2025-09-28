@@ -12,6 +12,6 @@ public interface UserService {
     UserResponse getUserById(String id);
     UserResponse getMyInfo();
     void deleteUser(String id);
-    User CreateUser(UserCreationRequest reg);
+    UserResponse CreateUser(UserCreationRequest reg);
     UserResponse UpdateUser(String id,UserUpdateRequest reg);
 }

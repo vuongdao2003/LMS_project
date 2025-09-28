@@ -1,6 +1,9 @@
 package com.example.demo.configuaration;
 
+import com.example.demo.constant.PredefinedRole;
+import com.example.demo.entity.Role;
 import com.example.demo.entity.User;
+import com.example.demo.repository.RoleRepository;
 import com.example.demo.repository.UserRepository;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -21,17 +24,19 @@ import java.util.HashSet;
 public class ApplicantionInitConfig {
     @Autowired
     private PasswordEncoder passwordEncoder;
+
+    RoleRepository roleRepository;
     @Bean
     ApplicationRunner initApplicationRunner(UserRepository userRepository) {
         return args -> {
             if(userRepository.findByUsername("ADMIN").isEmpty()){
-              var roles = new HashSet<String>();
-              roles.add("ADMIN");
+                HashSet<Role> roles = new HashSet<>();
+                roleRepository.findById(PredefinedRole.ADMIN_ROLE).ifPresent(roles::add);
               User user = User.builder()
                       .username("admin")
                       .password(passwordEncoder.encode("admin"))
                       .email("admin@gmail.com")
-                      //.role(roles)
+                      .roles(roles)
                       .build();
               userRepository.save(user);
               log.warn("admin user has been created with default password: admin");

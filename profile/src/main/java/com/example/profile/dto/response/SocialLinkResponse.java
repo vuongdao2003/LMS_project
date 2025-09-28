@@ -1,20 +1,16 @@
 package com.example.profile.dto.response;
 
+import com.example.profile.entity.SocialLink;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
-
-import java.time.LocalDate;
 
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Builder
-public class UserProfileResponse {
-    String id;
-    String firstName;
-    String lastName;
-    LocalDate birthDate;
-    String description;
-    String city;
+public class SocialLinkResponse {
+    private String id;
+    private String platform;
+    private String url;
 }

@@ -11,36 +11,24 @@ import java.nio.file.AccessDeniedException;
 @ControllerAdvice
 public class GlobalExceptionHandler {
 
-    @ExceptionHandler(Exception.class)
-    public ResponseEntity<ApiResponse> handleRuntimeException(RuntimeException ex){
-        ApiResponse apiResponse = new ApiResponse();
-        apiResponse.setMessage(ex.getMessage());
-        apiResponse.setCode(ErrorCode.UNCATEGORIZED.getCode());
-        return ResponseEntity.badRequest().body(apiResponse);
-    }
+
     @ExceptionHandler(AppException.class)
-    public ResponseEntity<ApiResponse> handleRuntimeException(AppException ex){
-        ErrorCode errorCode = ex.getErrorCode();
-        ApiResponse apiResponse = new ApiResponse();
-        apiResponse.setMessage(errorCode.getMessage());
-        apiResponse.setCode(errorCode.getCode());
-        return ResponseEntity.status(errorCode.getHttpStatusCode()).body(apiResponse);
+    public ResponseEntity<ApiResponse<?>> handlePaymentException(AppException ex) {
+        ErrorCode error = ex.getErrorCode();
+        ApiResponse<?> response = ApiResponse.builder()
+                .code(error.getCode())
+                .message(error.getMessage())
+                .build();
+        return ResponseEntity.status(error.getHttpStatusCode()).body(response);
     }
-    @ExceptionHandler(value = AccessDeniedException.class)
-    public ResponseEntity<ApiResponse> handleRuntimeException(AccessDeniedException ex){
-        ErrorCode errorCode = ErrorCode.UNAUTHORIZED;
-        return ResponseEntity.status(errorCode.getHttpStatusCode()).body(ApiResponse
-                .builder().code(errorCode.getCode())
-                .message(errorCode.getMessage())
-                .build());
-    }
-    @ExceptionHandler(value = MethodArgumentNotValidException.class)
-    public ResponseEntity<ApiResponse> handlingValidation(MethodArgumentNotValidException ex){
-        String enumKey = ex.getFieldError().getDefaultMessage();
-        ErrorCode errorCode = ErrorCode.valueOf(enumKey);
-        ApiResponse apiResponse = new ApiResponse();
-        apiResponse.setMessage(errorCode.getMessage());
-        apiResponse.setCode(errorCode.getCode());
-        return ResponseEntity.badRequest().body(apiResponse);
+
+
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<ApiResponse<?>> handleGeneralException(Exception ex) {
+        ApiResponse<?> response = ApiResponse.builder()
+                .code(ErrorCode.UNCATEGORIZED.getCode())
+                .message(ex.getMessage())
+                .build();
+        return ResponseEntity.status(500).body(response);
     }
 }
